@@ -1,10 +1,6 @@
 {
   "_class_name": "GeoCoreTransformer2DModel",
   "_diffusers_version": "0.32.0",
-  "auto_map": {
-    "AutoConfig": "modeling_geocore_transformer.GeoCoreTransformer2DModel",
-    "AutoModel": "modeling_geocore_transformer.GeoCoreTransformer2DModel"
-  },
   "in_channels": 128,
   "context_in_dim": 4096,
   "hidden_size": 4096,
@@ -12,7 +8,11 @@
   "depth": 8,
   "depth_repa": 8,
   "depth_single_blocks": 24,
-  "axes_dim": [32, 48, 48],
+  "axes_dim": [
+    32,
+    48,
+    48
+  ],
   "theta": 2000,
   "mlp_ratio": 3.0,
   "y_in_dim": 768,

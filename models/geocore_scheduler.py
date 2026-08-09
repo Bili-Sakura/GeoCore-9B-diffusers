@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Flow-matching Euler scheduler for GeoCore (continuous t in [0, 1])."""
+"""Compatibility re-export of the Diffusers GeoCore scheduler."""
 
 from bootstrap_geocore import ensure_geocore_diffusers
 

@@ -1,4 +1,4 @@
-"""Text- and geo-conditioned sampling from GeoCore-9B via the Diffusers pipeline.
+"""Text- and geo-conditioned sampling from GeoCore-9B via the Diffusers custom pipeline.
 
 Example:
     python inference.py \
@@ -11,14 +11,10 @@ from __future__ import annotations
 
 import argparse
 import os
+from pathlib import Path
 
 import torch
-
-from bootstrap_geocore import ensure_geocore_diffusers
-
-ensure_geocore_diffusers()
-
-from geocore_diffusers import GeoCorePipeline
+from diffusers import DiffusionPipeline
 
 torch.set_float32_matmul_precision("high")
 
@@ -26,10 +22,16 @@ NULL_META = -999.0
 
 
 def load_pipeline(model_dir: str, dtype: torch.dtype, lora: str | None = None):
-    pipe = GeoCorePipeline.from_pretrained(
-        model_dir,
-        torch_dtype=dtype,
-    )
+    model_path = Path(model_dir).resolve()
+    pipeline_file = model_path / "pipeline.py"
+    kwargs: dict = {
+        "torch_dtype": dtype,
+        "trust_remote_code": True,
+    }
+    if pipeline_file.is_file():
+        kwargs["custom_pipeline"] = str(pipeline_file)
+
+    pipe = DiffusionPipeline.from_pretrained(str(model_path), **kwargs)
     if lora:
         from peft import PeftModel
         pipe.transformer = PeftModel.from_pretrained(pipe.transformer, lora).merge_and_unload()

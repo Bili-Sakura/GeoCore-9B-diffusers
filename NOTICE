@@ -5,10 +5,14 @@ This product includes software adapted from the FLUX.2 reference implementation
 by Black Forest Labs (https://github.com/black-forest-labs/flux2), licensed under
 the Apache License, Version 2.0.
 
-  - models/flux2.py      diffusion transformer blocks, RoPE, modulation and
-                         embedding layers. Modified to add geospatial metadata
-                         conditioning with learnable null embeddings and the
-                         Geospatial Semantic Alignment projection head.
+  - models/flux2.py      training-time diffusion transformer blocks, RoPE,
+                         modulation and embedding layers. Modified to add
+                         geospatial metadata conditioning with learnable null
+                         embeddings and the Geospatial Semantic Alignment
+                         projection head.
+  - src/diffusers/models/transformers/transformer_geocore.py
+                         self-contained Diffusers inference copy of the same
+                         architecture (no dependency on models/flux2.py).
   - models/vae_flux2.py  autoencoder. The network is used unmodified apart from
                          formatting; checkpoint loading that accepts both the
                          diffusers and the BFL key layout was added.

@@ -11,23 +11,25 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Diffusers pipeline for GeoCore text- and geo-conditioned EO image generation."""
+"""Diffusers custom pipeline for GeoCore text- and geo-conditioned EO image generation.
+
+This file is Hub-copyable: `scripts/convert_checkpoint.py` copies it to the model
+repository as `pipeline.py` so inference needs only Diffusers + the model repo.
+"""
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
 import torch
 from diffusers import AutoencoderKLFlux2
 from diffusers.image_processor import VaeImageProcessor
 from diffusers.pipelines.pipeline_utils import DiffusionPipeline
-from diffusers.utils import is_torch_xla_available, logging, replace_example_docstring
+from diffusers.utils import BaseOutput, is_torch_xla_available, logging, replace_example_docstring
 from diffusers.utils.torch_utils import randn_tensor
+from PIL import Image
 from transformers import CLIPTextModel, CLIPTokenizer, T5EncoderModel, T5TokenizerFast
-
-from geocore_diffusers.models.transformers.transformer_geocore import GeoCoreTransformer2DModel
-from geocore_diffusers.pipelines.geocore.pipeline_output import GeoCorePipelineOutput
-from geocore_diffusers.schedulers.scheduling_geocore import GeoCoreFlowMatchEulerScheduler
 
 if is_torch_xla_available():
     import torch_xla.core.xla_model as xm
@@ -48,14 +50,15 @@ EXAMPLE_DOC_STRING = """
         ```py
         >>> from pathlib import Path
         >>> import torch
-        >>> from geocore_diffusers import GeoCorePipeline
+        >>> from diffusers import DiffusionPipeline
 
         >>> model_dir = Path("/path/to/GeoCore-9B")
-        >>> pipe = GeoCorePipeline.from_pretrained(
+        >>> pipe = DiffusionPipeline.from_pretrained(
         ...     str(model_dir),
+        ...     custom_pipeline=str(model_dir / "pipeline.py"),
+        ...     trust_remote_code=True,
         ...     torch_dtype=torch.bfloat16,
-        ... )
-        >>> pipe = pipe.to("cuda")
+        ... ).to("cuda")
 
         >>> image = pipe(
         ...     prompt="A satellite view of a highly dense urban city with towering skyscrapers",
@@ -70,6 +73,13 @@ EXAMPLE_DOC_STRING = """
 """
 
 
+@dataclass
+class GeoCorePipelineOutput(BaseOutput):
+    """Output class for GeoCore pipelines."""
+
+    images: list[Image.Image] | None = None
+
+
 class GeoCorePipeline(DiffusionPipeline):
     r"""Text- and geospatial-metadata-conditioned sampling for GeoCore-9B."""
 
@@ -78,9 +88,9 @@ class GeoCorePipeline(DiffusionPipeline):
 
     def __init__(
         self,
-        transformer: GeoCoreTransformer2DModel,
+        transformer,
         vae: AutoencoderKLFlux2,
-        scheduler: GeoCoreFlowMatchEulerScheduler,
+        scheduler,
         text_encoder: CLIPTextModel | None = None,
         text_encoder_2: T5EncoderModel | None = None,
         tokenizer: CLIPTokenizer | None = None,
@@ -332,7 +342,7 @@ class GeoCorePipeline(DiffusionPipeline):
         batch_size = len(prompt) * num_images_per_prompt
         latent_height = height // self.vae_scale_factor
         latent_width = width // self.vae_scale_factor
-        latent_channels = self.transformer.config.latent_channels
+        latent_channels = getattr(self.transformer.config, "latent_channels", 128)
 
         prompt_embeds, pooled_embeds, text_ids = self._encode_prompt(
             prompt, device=device, dtype=dtype, num_images_per_prompt=num_images_per_prompt,

@@ -1,12 +1,15 @@
 {
-  "_class_name": "GeoCorePipeline",
+  "_class_name": [
+    "pipeline",
+    "GeoCorePipeline"
+  ],
   "_diffusers_version": "0.32.0",
   "scheduler": [
-    "scheduler",
+    "scheduling_geocore",
     "GeoCoreFlowMatchEulerScheduler"
   ],
   "transformer": [
-    "transformer",
+    "transformer_geocore",
     "GeoCoreTransformer2DModel"
   ],
   "vae": [

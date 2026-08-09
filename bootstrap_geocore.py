@@ -11,34 +11,22 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Bootstrap `geocore_diffusers` from a source checkout without pip install."""
+"""Bootstrap `geocore_diffusers` from a source checkout without pip install.
+
+Hub / Diffusers custom-pipeline inference does **not** need this module: exported
+model directories embed self-contained remote-code copies under `pipeline.py`,
+`transformer/`, and `scheduler/`.
+"""
 
 from __future__ import annotations
 
 import importlib.util
-import os
 import sys
 from pathlib import Path
 
 
-def add_repo_root_for(caller_file: str) -> str:
-    """Add the nearest directory containing `bootstrap_geocore.py` to ``sys.path``."""
-    start = os.path.dirname(os.path.abspath(caller_file))
-    path = start
-    while True:
-        if os.path.isfile(os.path.join(path, "bootstrap_geocore.py")):
-            if path not in sys.path:
-                sys.path.insert(0, path)
-            return path
-        parent = os.path.dirname(path)
-        if parent == path:
-            break
-        path = parent
-    raise ImportError(f"Could not locate bootstrap_geocore.py from {start}")
-
-
 def ensure_geocore_diffusers() -> None:
-    """Make `geocore_diffusers` and repo-root `models` importable."""
+    """Make `geocore_diffusers` importable from the in-tree `src/diffusers` package."""
     try:
         import geocore_diffusers  # noqa: F401
         return
@@ -49,10 +37,6 @@ def ensure_geocore_diffusers() -> None:
     package_root = repo_root / "src" / "diffusers"
     if not package_root.is_dir():
         raise ImportError(f"GeoCore Diffusers sources not found at {package_root}")
-
-    repo_root_str = str(repo_root)
-    if repo_root_str not in sys.path:
-        sys.path.insert(0, repo_root_str)
 
     spec = importlib.util.spec_from_file_location(
         "geocore_diffusers",

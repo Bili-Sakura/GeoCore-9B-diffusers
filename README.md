@@ -284,8 +284,10 @@ wrapper that is not included here.
 
 ### Inference
 
-Inference uses a native Diffusers custom pipeline (`huggingface/pipeline.py`). Load a converted
-model directory or the Hub snapshot with `DiffusionPipeline.from_pretrained`:
+Inference is a self-contained Diffusers custom pipeline. The model directory embeds remote-code
+copies of the transformer, scheduler, and pipeline under `src/diffusers` layout conventions, so
+sampling needs only PyPI `diffusers` / `transformers` / `torch` — not `models/flux2.py` or the
+training tree.
 
 ```bash
 python inference.py \
@@ -299,11 +301,13 @@ Or in Python:
 
 ```python
 import torch
+from pathlib import Path
 from diffusers import DiffusionPipeline
 
+model_dir = Path("/path/to/GeoCore-9B")
 pipe = DiffusionPipeline.from_pretrained(
-    "JeonghyeokDo/GeoCore-9B",
-    custom_pipeline="pipeline.py",
+    str(model_dir),
+    custom_pipeline=str(model_dir / "pipeline.py"),
     trust_remote_code=True,
     torch_dtype=torch.bfloat16,
 ).to("cuda")
@@ -380,14 +384,16 @@ current script does not provide CPU offloading or a supported 24 GB single-GPU p
 train.py               pre-training with GSA
 finetune.py            full fine-tuning on the high-quality subset
 finetune_lora.py       LoRA adaptation (text-to-image or image-conditioned)
-inference.py           CLI wrapper around the Diffusers pipeline
+inference.py           Diffusers custom-pipeline CLI (model-dir self-contained)
 loss.py                flow matching objective, with and without GSA
 samplers.py            Euler flow-matching sampler (training validation)
 utils.py               DINOv3-Sat teacher loading
-models/geocore_transformer.py  Diffusers ModelMixin wrapper for Flux2
-models/geocore_scheduler.py  Flow-matching Euler scheduler
-huggingface/pipeline.py      GeoCorePipeline (Diffusers custom pipeline)
-models/flux2.py        DiT backbone, metadata conditioning, GSA head
+src/diffusers/         self-contained Diffusers inference package (geocore_diffusers)
+  models/transformers/transformer_geocore.py   DiT (no models/flux2.py import)
+  schedulers/scheduling_geocore.py             flow-matching Euler scheduler
+  pipelines/geocore/pipeline_geocore.py        GeoCorePipeline
+huggingface/           Hub scaffold; remote-code copies synced from src/diffusers
+models/flux2.py        training DiT backbone, metadata conditioning, GSA head
 models/vae_flux2.py    Flux.2 autoencoder, diffusers/BFL checkpoint loading
 models/text_encoder.py CLIP + T5 text encoders
 data/                  Git-10M dataset, metadata extraction, CFG dropout
