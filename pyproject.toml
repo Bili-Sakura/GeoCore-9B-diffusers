@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -15,9 +15,13 @@ dependencies = [
     "einops",
 ]
 
-[tool.setuptools.package-dir]
-"geocore_diffusers" = "src/diffusers"
-
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["geocore_diffusers*"]
+[tool.setuptools]
+package-dir = {"geocore_diffusers" = "src/diffusers"}
+packages = [
+    "geocore_diffusers",
+    "geocore_diffusers.models",
+    "geocore_diffusers.models.transformers",
+    "geocore_diffusers.pipelines",
+    "geocore_diffusers.pipelines.geocore",
+    "geocore_diffusers.schedulers",
+]

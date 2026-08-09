@@ -11,15 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Re-export pipeline output for package imports."""
 
-from dataclasses import dataclass
+from geocore_diffusers.pipelines.geocore.pipeline_geocore import GeoCorePipelineOutput
 
-from diffusers.utils import BaseOutput
-from PIL import Image
-
-
-@dataclass
-class GeoCorePipelineOutput(BaseOutput):
-    """Output class for GeoCore pipelines."""
-
-    images: list[Image.Image] | None = None
+__all__ = ["GeoCorePipelineOutput"]

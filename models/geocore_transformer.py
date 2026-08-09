@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Diffusers-compatible wrapper around the GeoCore Flow Matching DiT."""
+"""Compatibility re-export of the Diffusers GeoCore transformer."""
 
 from bootstrap_geocore import ensure_geocore_diffusers
 
