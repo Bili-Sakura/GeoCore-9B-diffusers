@@ -1,13 +1,11 @@
 #!/usr/bin/env bash
-# Sample from GeoCore-9B with text + geospatial conditioning.
+# Sample from GeoCore-9B with text + geospatial conditioning via the Diffusers pipeline.
 set -euo pipefail
 
-CKPT=${CKPT:?"set CKPT to a checkpoint (.pt) or a converted safetensors directory"}
-VAE_DIR=${VAE_DIR:?"set VAE_DIR to the Flux.2 VAE (Apache-2.0), e.g. the vae/ folder shipped with the GeoCore-9B weights"}
+MODEL_DIR=${MODEL_DIR:?"set MODEL_DIR to a Diffusers model directory (exported or Hub snapshot)"}
 
 python inference.py \
-    --ckpt "$CKPT" \
-    --vae "$VAE_DIR" \
+    --model-dir "$MODEL_DIR" \
     --prompt "A satellite view of a highly dense urban city with towering skyscrapers" \
     --lon 126.97 --lat 37.56 --res 0.0 \
     --num-samples 4 \

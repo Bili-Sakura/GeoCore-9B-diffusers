@@ -62,30 +62,32 @@ teacher and projection head are not needed for inference, and the exported weigh
 
 ## Usage
 
-These weights use a custom `Flux2` architecture, so load them with the model definition from the
-GitHub repository rather than a stock `diffusers` pipeline.
+Load and sample with the native Diffusers custom pipeline:
 
 ```python
 import torch
-from huggingface_hub import snapshot_download
+from diffusers import DiffusionPipeline
 
-from models.flux2 import Flux2, GeoCore9BParams
-from inference import load_state_dict
+pipe = DiffusionPipeline.from_pretrained(
+    "JeonghyeokDo/GeoCore-9B",
+    custom_pipeline="pipeline.py",
+    trust_remote_code=True,
+    torch_dtype=torch.bfloat16,
+).to("cuda")
 
-path = snapshot_download("JeonghyeokDo/GeoCore-9B")
-
-model = Flux2(GeoCore9BParams()).to("cuda", torch.bfloat16)
-model.load_state_dict(load_state_dict(path), strict=True)
-model.eval()
+image = pipe(
+    prompt="A satellite view of a highly dense urban city with towering skyscrapers",
+    lon=126.97, lat=37.56, res=0.0,
+    num_inference_steps=50,
+    guidance_scale=4.0,
+).images[0]
 ```
 
-Sampling, including the Euler flow-matching sampler and classifier-free guidance over both text and
-metadata, is provided by `inference.py`:
+Or use the CLI wrapper:
 
 ```bash
 python inference.py \
-    --ckpt /path/to/GeoCore-9B \
-    --vae /path/to/GeoCore-9B/vae \
+    --model-dir /path/to/GeoCore-9B \
     --prompt "A satellite view of a highly dense urban city with towering skyscrapers" \
     --lon 126.97 --lat 37.56 --res 0.0 \
     --num-samples 4 --out samples/
@@ -101,15 +103,14 @@ python inference.py \
 
 ### The frozen VAE is included
 
-`vae/` in this repository holds the frozen Flux.2 autoencoder that encodes and decodes the latents,
-so `snapshot_download` gives you everything the model needs:
+`vae/` in this repository holds the frozen Flux.2 autoencoder. A single `snapshot_download` gives
+you the transformer, VAE, pipeline, and scheduler config:
 
 ```bash
-python inference.py --ckpt /path/to/GeoCore-9B --vae /path/to/GeoCore-9B/vae ...
+python inference.py --model-dir /path/to/GeoCore-9B ...
 ```
 
-`models/vae_flux2.py` reads it directly (`load_autoencoder`), and `vae/config.json` is included so
-`diffusers >= 0.37` can load it too:
+The VAE is also loadable directly via Diffusers:
 
 ```python
 from diffusers import AutoencoderKLFlux2

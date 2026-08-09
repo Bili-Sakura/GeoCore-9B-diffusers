@@ -1,0 +1,16 @@
+{
+  "_class_name": "GeoCorePipeline",
+  "_diffusers_version": "0.32.0",
+  "scheduler": [
+    "scheduler",
+    "GeoCoreFlowMatchEulerScheduler"
+  ],
+  "transformer": [
+    "transformer",
+    "GeoCoreTransformer2DModel"
+  ],
+  "vae": [
+    "diffusers",
+    "AutoencoderKLFlux2"
+  ]
+}
