@@ -284,19 +284,40 @@ wrapper that is not included here.
 
 ### Inference
 
+Inference uses a native Diffusers custom pipeline (`huggingface/pipeline.py`). Load a converted
+model directory or the Hub snapshot with `DiffusionPipeline.from_pretrained`:
+
 ```bash
 python inference.py \
-    --ckpt /path/to/GeoCore-9B --vae "$VAE_DIR" \
+    --model-dir /path/to/GeoCore-9B \
     --prompt "A satellite view of a highly dense urban city with towering skyscrapers" \
     --lon 126.97 --lat 37.56 --res 0.0 \
     --num-samples 4 --out samples/
+```
+
+Or in Python:
+
+```python
+import torch
+from diffusers import DiffusionPipeline
+
+pipe = DiffusionPipeline.from_pretrained(
+    "JeonghyeokDo/GeoCore-9B",
+    custom_pipeline="pipeline.py",
+    trust_remote_code=True,
+    torch_dtype=torch.bfloat16,
+).to("cuda")
+
+image = pipe(
+    prompt="A satellite view of a highly dense urban city with towering skyscrapers",
+    lon=126.97, lat=37.56, res=0.0,
+).images[0]
 ```
 
 Omit any of `--res`, `--lon`, `--lat` to generate without that condition (the learned null embedding
 is used instead). Add `--lora /path/to/lora_adapter` to merge a standard text-to-image adapter
 before sampling. Image-conditioned adapters require the separate conditioned inference path noted
 above.
-`--ckpt` accepts a training `.pt`, a converted `.safetensors` file, or a sharded directory.
 
 ### Frozen probes
 
@@ -326,13 +347,13 @@ validation and downstream evaluation.
 ## Pre-trained weights
 
 The released weights (the final 300K-step training state) are available as sharded bf16
-safetensors on [Hugging Face](https://huggingface.co/JeonghyeokDo/GeoCore-9B). The reference
-[`inference.py`](inference.py) accepts this sharded directory. At present,
-[`finetune.py`](finetune.py), [`finetune_lora.py`](finetune_lora.py), and
+safetensors on [Hugging Face](https://huggingface.co/JeonghyeokDo/GeoCore-9B). The Diffusers
+pipeline in [`huggingface/pipeline.py`](huggingface/pipeline.py) loads this directory directly.
+At present, [`finetune.py`](finetune.py), [`finetune_lora.py`](finetune_lora.py), and
 [`eval/frozen_probe.py`](eval/frozen_probe.py) require the original training `.pt` checkpoint,
 which is not part of the public Hugging Face release.
 
-Convert the training checkpoint into sharded bf16 safetensors for the Hub. The training `.pt`
+Convert the training checkpoint into a Diffusers model directory for the Hub. The training `.pt`
 bundles the DeepSpeed ZeRO-2 optimizer state (~65 GB); the export keeps only the model weights
 (~18.5 GB). The published GeoCore-9B weights are the final 300K-step training state: the EMA of
 that run never accumulated due to a key-prefix bug in `update_ema` (fixed — see GitHub issue #2),
@@ -344,17 +365,8 @@ python scripts/convert_checkpoint.py \
     --out huggingface/ --weights model --dtype bf16
 ```
 
-Loading the exported weights:
-
-```python
-import torch
-from models.flux2 import Flux2, GeoCore9BParams
-from inference import load_state_dict
-
-model = Flux2(GeoCore9BParams()).to("cuda", torch.bfloat16)
-model.load_state_dict(load_state_dict("path/to/huggingface"), strict=True)
-model.eval()
-```
+The export writes transformer shards under `transformer/`, copies `pipeline.py`, `model_index.json`,
+and scheduler config — everything needed for one-stop `from_pretrained` loading.
 
 The reference inference script loads the 9.24B DiT, T5-XXL, CLIP-L/14, and the VAE onto one device.
 Their bf16 parameters alone require more than approximately 41 GB before activation memory; the
@@ -368,10 +380,13 @@ current script does not provide CPU offloading or a supported 24 GB single-GPU p
 train.py               pre-training with GSA
 finetune.py            full fine-tuning on the high-quality subset
 finetune_lora.py       LoRA adaptation (text-to-image or image-conditioned)
-inference.py           text + geospatial conditioned sampling
+inference.py           CLI wrapper around the Diffusers pipeline
 loss.py                flow matching objective, with and without GSA
-samplers.py            Euler / Euler-Maruyama flow matching samplers
+samplers.py            Euler flow-matching sampler (training validation)
 utils.py               DINOv3-Sat teacher loading
+models/geocore_transformer.py  Diffusers ModelMixin wrapper for Flux2
+models/geocore_scheduler.py  Flow-matching Euler scheduler
+huggingface/pipeline.py      GeoCorePipeline (Diffusers custom pipeline)
 models/flux2.py        DiT backbone, metadata conditioning, GSA head
 models/vae_flux2.py    Flux.2 autoencoder, diffusers/BFL checkpoint loading
 models/text_encoder.py CLIP + T5 text encoders

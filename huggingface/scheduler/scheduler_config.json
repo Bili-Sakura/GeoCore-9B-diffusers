@@ -1,0 +1,8 @@
+{
+  "_class_name": "GeoCoreFlowMatchEulerScheduler",
+  "_diffusers_version": "0.32.0",
+  "auto_map": {
+    "AutoScheduler": "scheduling_geocore.GeoCoreFlowMatchEulerScheduler"
+  },
+  "num_train_timesteps": 1000
+}
