@@ -11,12 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Diffusers-compatible wrapper around the GeoCore Flow Matching DiT."""
 
-from bootstrap_geocore import ensure_geocore_diffusers
+from geocore_diffusers.schedulers.scheduling_geocore import GeoCoreFlowMatchEulerScheduler
 
-ensure_geocore_diffusers()
-
-from geocore_diffusers.models.transformers.transformer_geocore import GeoCoreTransformer2DModel
-
-__all__ = ["GeoCoreTransformer2DModel"]
+__all__ = ["GeoCoreFlowMatchEulerScheduler"]

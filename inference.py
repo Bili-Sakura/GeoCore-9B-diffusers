@@ -13,7 +13,12 @@ import argparse
 import os
 
 import torch
-from diffusers import DiffusionPipeline
+
+from bootstrap_geocore import ensure_geocore_diffusers
+
+ensure_geocore_diffusers()
+
+from geocore_diffusers import GeoCorePipeline
 
 torch.set_float32_matmul_precision("high")
 
@@ -21,10 +26,8 @@ NULL_META = -999.0
 
 
 def load_pipeline(model_dir: str, dtype: torch.dtype, lora: str | None = None):
-    pipe = DiffusionPipeline.from_pretrained(
+    pipe = GeoCorePipeline.from_pretrained(
         model_dir,
-        custom_pipeline=os.path.join(model_dir, "pipeline.py"),
-        trust_remote_code=True,
         torch_dtype=dtype,
     )
     if lora:
