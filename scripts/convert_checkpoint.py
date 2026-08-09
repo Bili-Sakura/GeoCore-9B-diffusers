@@ -68,6 +68,22 @@ def write_transformer_shards(state_dict: dict, out_dir: str, max_shard_bytes: in
             json.dump({"metadata": {"total_size": total_bytes}, "weight_map": weight_map}, handle, indent=2)
 
 
+def copy_geocore_diffusers_sources(out_dir: str) -> None:
+    """Bundle in-tree Diffusers sources required for remote-code loading."""
+    shutil.copy2(os.path.join(REPO_ROOT, "bootstrap_geocore.py"), os.path.join(out_dir, "bootstrap_geocore.py"))
+
+    src_diffusers = os.path.join(REPO_ROOT, "src", "diffusers")
+    dst_diffusers = os.path.join(out_dir, "src", "diffusers")
+    if os.path.isdir(dst_diffusers):
+        shutil.rmtree(dst_diffusers)
+    shutil.copytree(src_diffusers, dst_diffusers)
+
+    models_dir = os.path.join(out_dir, "models")
+    os.makedirs(models_dir, exist_ok=True)
+    for rel_path in ("__init__.py", "flux2.py"):
+        shutil.copy2(os.path.join(REPO_ROOT, "models", rel_path), os.path.join(models_dir, rel_path))
+
+
 def copy_diffusers_scaffold(out_dir: str, model_size: str, dtype_name: str, weights: str, steps: int | None) -> None:
     for rel_path in (
         "model_index.json",
@@ -90,6 +106,7 @@ def copy_diffusers_scaffold(out_dir: str, model_size: str, dtype_name: str, weig
     })
     with open(os.path.join(out_dir, "transformer", "config.json"), "w") as handle:
         json.dump(transformer_config, handle, indent=2)
+    copy_geocore_diffusers_sources(out_dir)
 
 
 def main() -> None:

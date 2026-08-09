@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "geocore-diffusers"
+version = "0.1.0"
+description = "Diffusers-style GeoCore-9B inference components"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "torch>=2.4",
+    "diffusers>=0.32",
+    "transformers",
+    "einops",
+]
+
+[tool.setuptools.package-dir]
+"geocore_diffusers" = "src/diffusers"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["geocore_diffusers*"]

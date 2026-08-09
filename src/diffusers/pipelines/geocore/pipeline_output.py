@@ -11,12 +11,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Diffusers-compatible wrapper around the GeoCore Flow Matching DiT."""
 
-from bootstrap_geocore import ensure_geocore_diffusers
+from dataclasses import dataclass
 
-ensure_geocore_diffusers()
+from diffusers.utils import BaseOutput
+from PIL import Image
 
-from geocore_diffusers.models.transformers.transformer_geocore import GeoCoreTransformer2DModel
 
-__all__ = ["GeoCoreTransformer2DModel"]
+@dataclass
+class GeoCorePipelineOutput(BaseOutput):
+    """Output class for GeoCore pipelines."""
+
+    images: list[Image.Image] | None = None
